@@ -37,3 +37,8 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+#google
+google-services.json
+firebase-adminsdk.json
+firebase.json          # optional, if exposing config is risky
