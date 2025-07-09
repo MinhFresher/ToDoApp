@@ -3,15 +3,24 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
-    }
+      "@/*": ["./*"],
+      "@react-native-firebase/*": ["node_modules/@react-native-firebase/*/lib/typescript"]
+    },
+    "baseUrl": ".", // Enables absolute imports relative to the project root
+    "jsx": "react-native", // Explicitly sets JSX for React Native
+    "esModuleInterop": true, // Improves compatibility with CommonJS modules
+    "skipLibCheck": true, // Skips type checking of declaration files for faster builds
+    "resolveJsonModule": true // Allows importing JSON files (e.g., for config)
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "firebase.ts" // Explicitly include firebase.ts if not caught by **/*.ts
+  ],
+  "exclude": [
+    "node_modules", // Exclude node_modules to speed up compilation
+    "**/__tests__/*" // Exclude test files if you add them later
   ]
 }
