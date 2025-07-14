@@ -1,18 +1,40 @@
 import { View, TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
+import { db } from '../firebaseConfig'; 
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 type TaskProps = {
-    text: string
-    checked: boolean
-    setChecked: () => void
-    onDelete: () => void
-}
+  id: string; // Firestore document ID
+  text: string;
+  checked: boolean;
+  setChecked: () => void; // Kept for compatibility, not used
+  onDelete: () => void; // Kept for compatibility, not used
+};
 
-export default function Task (props: TaskProps) {
-  const { text, checked, setChecked, onDelete: deleteTodo } = props;
+export default function Task(props: TaskProps) {
+  const { id, text, checked } = props;
+
+  // Toggle task completion in Firestore
+  const handleChecked = async () => {
+    try {
+      const taskRef = doc(db, 'todos', id);
+      await updateDoc(taskRef, { checked: !checked });
+    } catch (error) {
+      console.error('Error updating task: ', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const taskRef = doc(db, 'todos', id);
+      await deleteDoc(taskRef);
+    } catch (error) {
+      console.error('Error deleting task: ', error);
+    }
+  };
 
   return (
     <View style={[styles.taskWrapper, checked && styles.taskChecked]}>
-      <TouchableOpacity onPress={setChecked}>
+      <TouchableOpacity onPress={handleChecked}>
         <Image
           style={styles.tinyIcon}
           source={
@@ -23,11 +45,9 @@ export default function Task (props: TaskProps) {
         />
       </TouchableOpacity>
 
-      <Text style={[styles.task, checked && styles.taskTextChecked]}>
-        {text}
-      </Text>
+      <Text style={[styles.task, checked && styles.taskTextChecked]}>{text}</Text>
 
-      <TouchableOpacity onPress={deleteTodo}>
+      <TouchableOpacity onPress={handleDelete}>
         <Text style={styles.deleteButton}>x</Text>
       </TouchableOpacity>
     </View>

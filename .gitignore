@@ -41,4 +41,6 @@ app-example
 #google
 google-services.json
 firebase-adminsdk.json
-firebase.json          # optional, if exposing config is risky
+firebase.json          
+
+# optional, if exposing config is risky
