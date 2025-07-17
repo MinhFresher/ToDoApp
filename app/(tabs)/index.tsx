@@ -14,6 +14,7 @@ type Todo = {
 export default function Index() {
   const [value, setValue] = useState('');
   const [todos, setTodos] = useState<Todo[]>([]);
+  
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'todos'), (snapshot) => {
