@@ -14,7 +14,8 @@ type Todo = {
 export default function Index() {
   const [value, setValue] = useState('');
   const [todos, setTodos] = useState<Todo[]>([]);
-  
+  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
+
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'todos'), (snapshot) => {
@@ -46,7 +47,11 @@ export default function Index() {
     }
   };
 
-  // Delete and toggle in Task.tsx
+  const filteredTodos = todos.filter(todo => {
+    if (filter === 'all') return true;
+    if (filter === 'active') return !todo.checked;
+    if (filter === 'completed') return todo.checked;
+  });
 
   return (
     <View style={styles.container}>
@@ -66,8 +71,20 @@ export default function Index() {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.filterContainer}>
+        <TouchableOpacity onPress={() => setFilter('all')}>
+          <Text style={[styles.filterButton, filter === 'all' && styles.activeFilter]}>All</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setFilter('active')}>
+          <Text style={[styles.filterButton, filter === 'active' && styles.activeFilter]}>Active</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setFilter('completed')}>
+          <Text style={[styles.filterButton, filter === 'completed' && styles.activeFilter]}>Completed</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView style={{ width: '100%', paddingHorizontal: 30 }}>
-        {todos.map((task) => (
+        {filteredTodos.map((task) => (
           <Task
             key={task.id}
             text={task.text}
@@ -113,5 +130,20 @@ const styles = StyleSheet.create({
   tinyIcon: {
     width: 50,
     height: 50,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 10,
+  },
+  filterButton: {
+    fontSize: 16,
+    color: 'gray',
+    paddingHorizontal: 10,
+  },
+  activeFilter: {
+    color: '#9677f0',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 });
