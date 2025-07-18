@@ -1,8 +1,9 @@
 import { Text, View, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useState, useEffect } from 'react';
 import { db } from '../../firebaseConfig'; 
-import { collection, addDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import Task from '@/components/Task';
+import { getAuth } from 'firebase/auth';
 
 type Todo = {
   id: string; // Firestore document ID
@@ -11,90 +12,138 @@ type Todo = {
   createdAt: Date;
 };
 
+type GroupedTodos = {
+  [date: string]: Todo[];
+};
+
 export default function Index() {
   const [value, setValue] = useState('');
-  const [todos, setTodos] = useState<Todo[]>([]);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
-
+  const [groupedTodos, setGroupedTodos] = useState<GroupedTodos>({});
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'todos'), (snapshot) => {
-      const todoList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        text: doc.data().text,
-        checked: doc.data().checked,
-        createdAt: doc.data().createdAt.toDate(), // Convert Firestore timestamp to Date
-      }));
-      setTodos(todoList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())); // Sort by newest first
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const q = query(
+      collection(db, 'todos'),
+      where('uid', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const grouped: GroupedTodos = {};
+
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        const createdAt = data.createdAt?.toDate?.() ?? new Date();
+        const dateKey = createdAt.toDateString(); 
+
+        const todo: Todo = {
+          id: doc.id,
+          text: data.text,
+          checked: data.checked,
+          createdAt,
+        };
+
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(todo);
+      });
+
+      setGroupedTodos(grouped);
     });
 
-    // Cleanup listener on unmount
     return () => unsubscribe();
   }, []);
 
   const handleAdd = async () => {
-    if (value.length > 0) {
-      try {
-        await addDoc(collection(db, 'todos'), {
-          text: value,
-          checked: false,
-          createdAt: new Date(),
-        });
-        setValue('');
-      } catch (error) {
-        console.error('Error adding task: ', error);
-      }
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) return;
+
+    if (value.trim().length === 0) return;
+
+    try {
+      await addDoc(collection(db, 'todos'), {
+        text: value.trim(),
+        checked: false,
+        createdAt: new Date(),
+        uid: user.uid, 
+      });
+      setValue('');
+    } catch (error) {
+      console.error('Error adding task:', error);
     }
   };
 
-  const filteredTodos = todos.filter(todo => {
-    if (filter === 'all') return true;
-    if (filter === 'active') return !todo.checked;
-    if (filter === 'completed') return todo.checked;
-  });
+
+  const groupedFilteredTodos = Object.entries(groupedTodos).reduce((acc, [date, todos]) => {
+    const filtered = todos.filter((todo) => {
+      if (filter === 'all') return true;
+      if (filter === 'active') return !todo.checked;
+      if (filter === 'completed') return todo.checked;
+    });
+
+    if (filtered.length > 0) {
+      acc[date] = filtered;
+    }
+
+    return acc;
+  }, {} as Record<string, Todo[]>);
+
 
   return (
     <View style={styles.container}>
-      <Text style={{ marginTop: '10%', fontSize: 35, textAlign: 'center', color: 'white' }}>
-        Today
-      </Text>
+      <Text style={styles.title}>Today</Text>
+
       <View style={styles.textInputForm}>
         <TextInput
           style={styles.textInput}
-          onChangeText={(value) => setValue(value)}
           placeholder="Enter your task"
           placeholderTextColor="lightgray"
           value={value}
+          onChangeText={setValue}
         />
         <TouchableOpacity onPress={handleAdd}>
-          <Text style={{ fontSize: 30, marginBottom: 5, color: 'white' }}>+</Text>
+          <Text style={styles.addButton}>+</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.filterContainer}>
-        <TouchableOpacity onPress={() => setFilter('all')}>
-          <Text style={[styles.filterButton, filter === 'all' && styles.activeFilter]}>All</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setFilter('active')}>
-          <Text style={[styles.filterButton, filter === 'active' && styles.activeFilter]}>Active</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setFilter('completed')}>
-          <Text style={[styles.filterButton, filter === 'completed' && styles.activeFilter]}>Completed</Text>
-        </TouchableOpacity>
+        {(['all', 'active', 'completed'] as const).map((type) => (
+          <TouchableOpacity key={type} onPress={() => setFilter(type)}>
+            <Text
+              style={[
+                styles.filterButton,
+                filter === type && styles.activeFilter,
+              ]}
+            >
+              {type.charAt(0).toUpperCase() + type.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <ScrollView style={{ width: '100%', paddingHorizontal: 30 }}>
-        {filteredTodos.map((task) => (
-          <Task
-            key={task.id}
-            text={task.text}
-            checked={task.checked}
-            id={task.id} // Pass Firestore ID
-            setChecked={() => {}} 
-            onDelete={() => {}} 
-          />
+        {Object.entries(groupedFilteredTodos).map(([date, todos]) => (
+          <View key={date}>
+            <Text style={styles.groupHeader}>{date}</Text>
+            {todos.map((task) => (
+              <Task
+                key={task.id}
+                id={task.id}
+                text={task.text}
+                checked={task.checked}
+                setChecked={() => {}}
+                onDelete={() => {}}
+              />
+            ))}
+          </View>
         ))}
       </ScrollView>
+
     </View>
   );
 }
@@ -105,8 +154,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#18191a',
     alignItems: 'center',
   },
+  title: {
+    fontSize: 35,
+    textAlign: 'center',
+    color: 'white',
+    marginBottom: 10,
+  },
   text: {
     color: '#fff',
+  },
+  addButton: {
+    fontSize: 30,
+    color: 'white',
   },
   textInputForm: {
     flexDirection: 'row',
@@ -146,4 +205,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textDecorationLine: 'underline',
   },
+  todoList: {
+    width: '100%',
+    paddingHorizontal: 30,
+  },
+  groupHeader: {
+    fontSize: 18,
+    color: 'lightgray',
+    marginTop: 20,
+    marginBottom: 10,
+  }
 });
