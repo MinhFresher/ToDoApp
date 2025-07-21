@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Linking, TextInput } from 'react-native';
 import axios from 'axios';
 
+import NewsCard from '@/components/NewsCard';
 
 type Article = {
   title: string;
@@ -60,15 +61,6 @@ export default function NewsScreen() {
     fetchNews();
   };
 
-  const renderItem = ({ item }: { item: Article }) => (
-    <TouchableOpacity style={styles.card} onPress={() => openArticle(item.url)}>
-      {item.urlToImage && (
-        <Image source={{ uri: item.urlToImage }} style={styles.image} />
-      )}
-      <Text style={styles.title}>{item.title}</Text>
-      <Text style={styles.description}>{item.description}</Text>
-    </TouchableOpacity>
-  );
 
   return (
     <View style={styles.container}>
@@ -79,14 +71,7 @@ export default function NewsScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Search news..."
-          style={{
-            flex: 1,
-            borderColor: '#ccc',
-            borderWidth: 1,
-            borderRadius: 10,
-            paddingHorizontal: 10,
-            backgroundColor: 'white',
-          }}
+          style={styles.searchBar}
         />
         <TouchableOpacity onPress={handleSearch} style={{ marginLeft: 8, justifyContent: 'center' }}>
           <Text style={{ color: '#007bff' }}>Search</Text>
@@ -116,8 +101,16 @@ export default function NewsScreen() {
 
       <FlatList
         data={articles}
-        renderItem={renderItem}
         keyExtractor={(_item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <NewsCard
+            title={item.title}
+            description={item.description}
+            urlToImage={item.urlToImage}
+            onPress={() => openArticle(item.url)}
+          />
+        )}
+        contentContainerStyle={{ paddingBottom: 16 }}
       />
     </View>
   );
@@ -135,26 +128,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: '#fff'
   },
-  card: { 
-    marginBottom: 20, 
-    borderBottomWidth: 1, 
-    borderColor: '#ddd', 
-    paddingBottom: 20 
-  },
-  image: { 
-    width: '100%', 
-    height: 180, 
-    borderRadius: 8 
-  },
-  title: { 
-    fontSize: 16, 
-    fontWeight: 'bold',
-    color: '#fff', 
-    marginTop: 8 
-  },
-  description: { 
-    fontSize: 14, 
-    color: '#fff', 
-    marginTop: 4 
-  },
+  searchBar: {
+    flex: 1,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    backgroundColor: 'white',
+  }
 });
