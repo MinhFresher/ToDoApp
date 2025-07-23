@@ -53,18 +53,15 @@ export default function Index() {
 
       setGroupedTodos(grouped);
     });
-
     return () => unsubscribe();
   }, []);
 
   const handleAdd = async () => {
     const auth = getAuth();
     const user = auth.currentUser;
-
     if (!user) return;
 
     if (value.trim().length === 0) return;
-
     try {
       await addDoc(collection(db, 'todos'), {
         text: value.trim(),
@@ -151,7 +148,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#18191a',
+    backgroundColor: '#0f0f0f',
     alignItems: 'center',
   },
   title: {

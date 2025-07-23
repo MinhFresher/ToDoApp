@@ -184,7 +184,7 @@ export default function NewsScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#18191a', 
+    backgroundColor: '#0f0f0f', 
     padding: 16 
   },
   header: { 
