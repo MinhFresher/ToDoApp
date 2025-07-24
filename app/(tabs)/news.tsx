@@ -172,7 +172,7 @@ export default function NewsScreen() {
               onPress={() => openArticle(item.url)}
             />
           )}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(_item, index) => index.toString()}
           refreshing={refreshing}
           onRefresh={()=>fetchNews(true)}
         />

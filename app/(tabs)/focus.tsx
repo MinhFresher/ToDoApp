@@ -4,7 +4,7 @@ import { useFocusEffect } from 'expo-router';
 import { getDocs, collection, query, where } from 'firebase/firestore';
 import { db, auth } from '../../firebaseConfig';
 import { Picker } from '@react-native-picker/picker';
-
+import { saveFocusSession } from '@/firestore/focusTask';
 
 type Task = {
   id: string;
@@ -21,6 +21,7 @@ export default function FocusMode(){
   const [secondsLeft, setSecondsLeft] = useState(25 * 60);
   const intervalRef = useRef<number| null>(null);
   const [pickerKey, setPickerKey] = useState(0);
+  const [startTime, setStartTime] = useState<number | null>(null);
 
   
   useEffect(() => {
@@ -30,9 +31,24 @@ export default function FocusMode(){
           if (!isCountUp && prev === 0) {
             clearInterval(intervalRef.current!);
             setIsRunning(false);
+
+            // Save session when countdown ends
+            const endTime = Date.now();
+            if (startTime && selectedTask) {
+              const durationInSeconds = customMinutes * 60;
+              saveFocusSession({
+                taskId: selectedTask.id,
+                taskName: selectedTask.text,
+                startTime,
+                endTime,
+                durationInSeconds,
+              });
+            }
+
             alert('Focus session complete!');
             return 0;
           }
+
           return isCountUp ? prev + 1 : prev - 1;
         });
       }, 1000);
@@ -65,18 +81,53 @@ export default function FocusMode(){
     }, [])
   );
 
+  const handleTimerPress = () => {
+    if (!selectedTask) {
+      Alert.alert('⚠️ Select a Task', 'Please choose a task before starting focus mode.');
+      return;
+    }
+
+    if (!isRunning) {
+      setStartTime(Date.now());
+      if (!isCountUp) {
+        setSecondsLeft(customMinutes * 60);
+      }
+    } else {
+      const endTime = Date.now();
+      if (startTime) {
+        const durationInSeconds = isCountUp
+          ? secondsLeft
+          : customMinutes * 60 - secondsLeft;
+
+        saveFocusSession({
+          taskId: selectedTask.id,
+          taskName: selectedTask.text,
+          startTime,
+          endTime,
+          durationInSeconds,
+        });
+      }
+    }
+
+    setIsRunning(prev => !prev);
+  };
+
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
     const s = (sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
+  
   return (
     <View style={styles.container}>
       <Text style={styles.header}> Focus Mode</Text>
       <Picker
         key={pickerKey} //  force re-render
-        style={styles.picker}
+        style={[
+          styles.picker,
+          !selectedTask && { color: '#888' },
+        ]}
         dropdownIconColor="#f2f2f2ff"
         selectedValue={selectedTask?.id || ''}
         onValueChange={(itemValue) => {
@@ -142,17 +193,7 @@ export default function FocusMode(){
 
       <TouchableOpacity
         style={styles.timeButton}
-        onPress={() => {
-          if (!selectedTask) {
-            Alert.alert('⚠️ Select a Task', 'Please choose a task before starting focus mode.');
-            return;
-          }
-
-          if (!isRunning && !isCountUp) {
-            setSecondsLeft(customMinutes * 60);
-          }
-          setIsRunning(prev => !prev);
-        }}
+        onPress={handleTimerPress}
       >
         <Text style={styles.buttonText}>
           {isRunning ? '⏹ Stop' : '▶ Start'}
@@ -165,7 +206,7 @@ export default function FocusMode(){
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f0f0f', // deeper dark for sleek look
+    backgroundColor: '#0f0f0f',
     padding: 20,
   },
   header: {
@@ -182,8 +223,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    elevation: 3, // Android shadow
-    shadowColor: '#000', // iOS shadow
+    elevation: 3, 
+    shadowColor: '#000', 
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -192,7 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 56,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#4ade80', // emerald glow
+    color: '#4ade80', 
     marginBottom: 24,
   },
   buttonText: {
@@ -202,7 +243,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   modeButton: {
-    backgroundColor: '#2563eb', // more vivid blue
+    backgroundColor: '#2563eb',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 14,
