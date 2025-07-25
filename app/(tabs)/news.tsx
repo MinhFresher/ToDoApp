@@ -107,7 +107,7 @@ export default function NewsScreen() {
           style={styles.searchBar}
         />
         <TouchableOpacity onPress={handleSearch} style={{ marginLeft: 8, justifyContent: 'center' }}>
-          <Text style={{ color: '#007bff' }}>Search</Text>
+          <Text style={{ color: '#6200ea' }}>Search</Text>
         </TouchableOpacity>
       </View>
 
@@ -120,7 +120,7 @@ export default function NewsScreen() {
               onPress={() => setCountry(c.code)}
               style={{
                 padding: 8,
-                backgroundColor: country === c.code ? '#007bff' : '#e0e0e0',
+                backgroundColor: country === c.code ? '#ffb404ff' : '#e0e0e0',
                 borderRadius: 20,
                 margin: 4,
               }}
