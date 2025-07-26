@@ -13,7 +13,6 @@ export default function CalendarScreen(){
   const [markedDates, setMarkedDates] = useState<MarkedDates>({});
   const [tasksByDate, setTasksByDate] = useState<TaskMap>({});
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [tasks, setTasks] = useState([]);
   
   useEffect(() => {
     const fetchTasks = async () => {
@@ -44,7 +43,7 @@ export default function CalendarScreen(){
       Object.keys(tempTasks).forEach((date) => {
         marks[date] = {
           marked: true,
-          dotColor: 'tomato',
+          dotColor: '#ff6347',
         };
       });
 
@@ -58,11 +57,25 @@ export default function CalendarScreen(){
   return (
     <View style={styles.container}>
       <Calendar
+        theme={{
+          backgroundColor: '#a2abab4a',
+          calendarBackground: '#1c2526',
+          textSectionTitleColor: '#b0bec5', //day names (Sun, Mon, etc.)
+          selectedDayBackgroundColor: '#ffbf00ff', 
+          selectedDayTextColor: '#ffffff',
+          todayTextColor: '#9677f0', 
+          dayTextColor: '#eceff1', 
+          textDisabledColor: '#607d8b', //inactive days
+          arrowColor: '#9677f0',
+          monthTextColor: '#9677f0',
+          textDayFontWeight: '400',
+          textMonthFontWeight: '600',
+          textDayHeaderFontWeight: '500',
+        }}
         markedDates={{
           ...markedDates,
           [selectedDate]: {
             selected: true,
-            selectedColor: '#4caf50',
             ...markedDates[selectedDate],
           },
         }}
@@ -89,20 +102,23 @@ export default function CalendarScreen(){
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10
+    padding: 10,
+    backgroundColor: '#0f0f0f'
   },
   heading: {
     fontSize: 18,
     fontWeight: '600',
     marginVertical: 10,
+    color: '#ffffff', 
   },
   taskItem: {
-    backgroundColor: '#eee',
+    backgroundColor: '#2a2a2a', 
     padding: 10,
     borderRadius: 8,
     marginBottom: 5,
   },
   taskText: {
     fontSize: 16,
+    color: '#eceff1', 
   },
 });

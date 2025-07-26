@@ -107,12 +107,14 @@ export default function NewsScreen() {
           style={styles.searchBar}
         />
         <TouchableOpacity onPress={handleSearch} style={{ marginLeft: 8, justifyContent: 'center' }}>
-          <Text style={{ color: '#6200ea' }}>Search</Text>
+          <View style={{ backgroundColor: '#6200ea' }}>
+            <Text style={{color:'white', paddingHorizontal:12, paddingVertical: 10 }}>Search</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
       <View style={{ marginBottom: 10 }}>
-        <Text style={{ fontWeight: 'bold' }}>Select Country:</Text>
+        <Text style={{ fontWeight: 'bold', color: 'white' }}>Select Country:</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {countries.map((c) => (
             <TouchableOpacity
@@ -120,12 +122,12 @@ export default function NewsScreen() {
               onPress={() => setCountry(c.code)}
               style={{
                 padding: 8,
-                backgroundColor: country === c.code ? '#ffb404ff' : '#e0e0e0',
+                backgroundColor: country === c.code ? '#ffb404ff' : '#ffffff22',
                 borderRadius: 20,
                 margin: 4,
               }}
             >
-              <Text style={{ color: country === c.code ? 'white' : 'black' }}>
+              <Text style={{ color: 'white' }}>
                 {c.name}
               </Text>
             </TouchableOpacity>
@@ -141,14 +143,14 @@ export default function NewsScreen() {
             style={[
               {
                 padding: 8,
-                backgroundColor: category === cat ? '#6200ea' : '#fff',
+                backgroundColor: category === cat ? '#6200ea' : '#ffffff22',
                 borderRadius: 20,
                 margin: 4,
               },
             ]}
             onPress={() => setCategory(cat)}
           >
-            <Text style={{ color: category === cat ? 'white' : 'black' }}>
+            <Text style={{ color: 'white'}}>
               {cat.charAt(0).toUpperCase() + cat.slice(1)}
             </Text>
           </TouchableOpacity>
@@ -197,7 +199,8 @@ const styles = StyleSheet.create({
     flex: 1,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 5,
+    paddingVertical: 10,
     paddingHorizontal: 10,
     backgroundColor: 'white',
   }
